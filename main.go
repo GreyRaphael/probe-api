@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var version = "0.3.0"
+var version = "0.4.0"
 
 func probe(url, body string, headers map[string]string) int {
 	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(body))
@@ -32,10 +32,13 @@ func probe(url, body string, headers map[string]string) int {
 	return resp.StatusCode
 }
 
-func printResult(label string, code int) {
+func printResult(label string, code int, authBlind bool) {
 	switch {
 	case code == 404 || code == 405 || code == 0:
 		fmt.Printf("  %-30s -> HTTP %-3d  [X] not supported\n", label, code)
+	case authBlind && (code == 401 || code == 403):
+		// 401/403 unreliable: API returns same code for nonexistent paths
+		fmt.Printf("  %-30s -> HTTP %-3d  [?] inconclusive (auth-blind)\n", label, code)
 	default:
 		fmt.Printf("  %-30s -> HTTP %-3d  [OK] endpoint exists\n", label, code)
 	}
@@ -45,7 +48,7 @@ type probeTest struct {
 	path     string
 	body     string
 	label    string
-	authType string // "bearer" or "anthropic"
+	authType string
 }
 
 func main() {
@@ -69,6 +72,8 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  1. OpenAI Responses API    (/responses)\n")
 		fmt.Fprintf(os.Stderr, "  2. OpenAI Chat Completions  (/chat/completions)\n")
 		fmt.Fprintf(os.Stderr, "  3. Anthropic Messages API   (/messages)\n\n")
+		fmt.Fprintf(os.Stderr, "Auth-blind detection: if the API returns 401/403 for a known-\n")
+		fmt.Fprintf(os.Stderr, "nonexistent path, those codes are marked [?] inconclusive.\n\n")
 		fmt.Fprintf(os.Stderr, "Arguments:\n")
 		fmt.Fprintf(os.Stderr, "  base_url    API base URL including path prefix\n")
 		fmt.Fprintf(os.Stderr, "  api_key     API key / token for authentication\n\n")
@@ -78,6 +83,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  probe-api https://openrouter.ai/api/v1 sk-or-xxx\n")
 		fmt.Fprintf(os.Stderr, "  probe-api -m mimo-v2.5-pro https://example.com/v1 tp-xxx\n")
 		fmt.Fprintf(os.Stderr, "  probe-api https://api.deepseek.com/anthropic sk-xxx\n")
+		fmt.Fprintf(os.Stderr, "  probe-api https://api.deepseek.com sk-xxx\n")
 		fmt.Fprintf(os.Stderr, "  probe-api -v\n\n")
 		fmt.Fprintf(os.Stderr, "Exit Codes:\n")
 		fmt.Fprintf(os.Stderr, "  0   All probes completed\n")
@@ -107,7 +113,6 @@ func main() {
 		model = "test"
 	}
 
-	// Build request bodies
 	rBody, _ := json.Marshal(map[string]any{"model": model, "input": "hi"})
 	cBody, _ := json.Marshal(map[string]any{
 		"model":    model,
@@ -125,12 +130,18 @@ func main() {
 		{path: "/messages", body: string(aBody), label: "Anthropic Messages API", authType: "anthropic"},
 	}
 
-	// Build auth prefix at runtime
 	bearPrefix := strings.Join([]string{"Bea", "rer "}, "")
 
 	fmt.Printf("Probing: %s\n", baseURL)
 	fmt.Println("---")
 
+	// Step 1: probe a known-nonexistent path to detect auth-blind APIs
+	probeURL := strings.TrimRight(baseURL, "/") + "/__probe_nonexistent__"
+	probeHeaders := map[string]string{"Authorization": bearPrefix + apiKey}
+	baselineCode := probe(probeURL, string(rBody), probeHeaders)
+	authBlind := (baselineCode == 401 || baselineCode == 403)
+
+	// Step 2: probe each protocol
 	for _, t := range tests {
 		url := strings.TrimRight(baseURL, "/") + "/" + strings.TrimLeft(t.path, "/")
 		headers := make(map[string]string)
@@ -142,9 +153,17 @@ func main() {
 			headers["anthropic-version"] = "2023-06-01"
 		}
 		code := probe(url, t.body, headers)
-		printResult(t.label, code)
+		printResult(t.label, code, authBlind)
 	}
 
+	if authBlind {
+		fmt.Println("---")
+		fmt.Println("Note: this API returns 401/403 for all paths (auth-blind).")
+		fmt.Println("Only 200/400/422 reliably indicate endpoint existence.")
+	}
 	fmt.Println("---")
 	fmt.Println("404/405 = not supported | 200/400/422 = endpoint exists | 0 = connection failed")
+	if authBlind {
+		fmt.Println("401/403 = inconclusive (API returns same code for any path)")
+	}
 }
