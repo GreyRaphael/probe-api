@@ -32,6 +32,8 @@ probe-api [flags] <base_url> <api_key>
 2. **Chat Completions API** — `POST /chat/completions`（OpenAI 兼容）
 3. **Anthropic Messages API** — `POST /messages`，使用 `x-api-key` 认证
 
+**Auth-blind 检测：** 如果 API 对一个已知不存在的路径也返回 401/403，说明该 API 做统一鉴权拦截，401/403 标记为 `[?] inconclusive`（不确定），只有 200/400/422 才能确认端点存在。
+
 ### 参数
 
 | 参数 | 缩写 | 默认值 | 说明 |
@@ -98,8 +100,8 @@ requires_openai_auth = false
 推送 annotated tag 触发 GitHub Actions 自动构建，产物包括 `linux/amd64`、`linux/arm64`、`darwin/amd64`、`darwin/arm64`（tar.gz）和 `windows/amd64`（zip）。每个压缩包内只有一个 `probe-api`（或 `probe-api.exe`）二进制文件。
 
 ```bash
-git tag -a v0.3.0 -m "v0.3.0: one-shot probe for Responses API, Chat Completions, and Anthropic Messages"
-git push origin v0.3.0
+git tag -a v0.4.0 -m "v0.4.0: one-shot probe for Responses API, Chat Completions, and Anthropic Messages"
+git push origin v0.4.0
 ```
 
 ## 编译

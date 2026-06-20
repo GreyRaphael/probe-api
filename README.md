@@ -32,6 +32,8 @@ Probes all three protocols in one shot:
 2. **Chat Completions API** — `POST /chat/completions` (OpenAI compatible)
 3. **Anthropic Messages API** — `POST /messages` with `x-api-key` auth
 
+**Auth-blind detection:** if the API returns 401/403 for a known-nonexistent path, those codes are marked `[?] inconclusive` — only 200/400/422 reliably indicate endpoint existence.
+
 ### Flags
 
 | Flag | Short | Default | Description |
@@ -98,8 +100,8 @@ requires_openai_auth = false
 Push an annotated tag to trigger GitHub Actions — builds `linux/amd64`, `linux/arm64`, `darwin/amd64`, `darwin/arm64` (tar.gz) and `windows/amd64` (zip). Each archive contains a single `probe-api` (or `probe-api.exe`) binary.
 
 ```bash
-git tag -a v0.3.0 -m "v0.3.0: one-shot probe for Responses API, Chat Completions, and Anthropic Messages"
-git push origin v0.3.0
+git tag -a v0.4.0 -m "v0.4.0: one-shot probe for Responses API, Chat Completions, and Anthropic Messages"
+git push origin v0.4.0
 ```
 
 ## Build
