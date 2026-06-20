@@ -2,9 +2,9 @@
 
 [English](README.md)
 
-检测 OpenAI 兼容 API 是否支持 **Responses API** 或 **Chat Completions API**。
+检测 OpenAI 兼容 API 是否支持 **Responses API**、**Chat Completions API** 或 **Anthropic Messages API** —— 一次探测全部三种协议。
 
-配置 [Codex CLI](https://github.com/openai/codex) 等工具时非常有用——如果 provider 只支持 Chat Completions，需要设置 `wire_api = "chat"`。
+配置 [Codex CLI](https://github.com/openai/codex) 等工具时非常有用。
 
 ## 安装
 
@@ -27,6 +27,11 @@ make build
 probe-api [flags] <base_url> <api_key>
 ```
 
+一次探测三种协议：
+1. **Responses API** — `POST /responses`（OpenAI 原生）
+2. **Chat Completions API** — `POST /chat/completions`（OpenAI 兼容）
+3. **Anthropic Messages API** — `POST /messages`，使用 `x-api-key` 认证
+
 ### 参数
 
 | 参数 | 缩写 | 默认值 | 说明 |
@@ -34,37 +39,34 @@ probe-api [flags] <base_url> <api_key>
 | `--version` | `-v` | | 打印版本号 |
 | `--help` | `-h` | | 打印帮助信息 |
 | `--model` | `-m` | `test` | 探测请求使用的模型名 |
-| `--anthropic` | `-a` | | 探测 Anthropic Messages API（`/messages`） |
 
 ### 示例
 
 ```bash
-# OpenRouter（两个 API 都支持）
+# OpenRouter（三种协议都支持）
 probe-api https://openrouter.ai/api/v1 sk-or-xxx
 
 # 小米 MiMo（仅支持 Chat Completions）
 probe-api -m mimo-v2.5-pro https://token-plan-cn.xiaomimimo.com/v1 tp-xxx
 
-# OpenAI（两个 API 都支持）
+# DeepSeek Anthropic 端点
+probe-api https://api.deepseek.com/anthropic sk-xxx
+
+# OpenAI
 probe-api https://api.openai.com/v1 sk-xxx
 
-# 本地 Ollama（仅 Chat Completions，不需要 API key）
+# 本地 Ollama
 probe-api http://localhost:11434/v1 ollama
-
-# DeepSeek Anthropic 端点
-probe-api -a https://api.deepseek.com/anthropic sk-xxx
-
-# Anthropic 官方
-probe-api -a -m claude-sonnet-4-20250514 https://api.anthropic.com sk-xxx
 ```
 
 ### 输出示例
 
 ```
-Probing: https://openrouter.ai/api/v1
+Probing: https://token-plan-cn.xiaomimimo.com/v1
 ---
-  Responses API             -> HTTP 400  [OK] endpoint exists
-  Chat Completions API      -> HTTP 400  [OK] endpoint exists
+  Responses API                  -> HTTP 404  [X] not supported
+  Chat Completions API           -> HTTP 200  [OK] endpoint exists
+  Anthropic Messages API         -> HTTP 404  [X] not supported
 ---
 404/405 = not supported | 200/400/422 = endpoint exists | 0 = connection failed
 ```
@@ -96,8 +98,8 @@ requires_openai_auth = false
 推送 annotated tag 触发 GitHub Actions 自动构建，产物包括 `linux/amd64`、`linux/arm64`、`darwin/amd64`、`darwin/arm64`（tar.gz）和 `windows/amd64`（zip）。每个压缩包内只有一个 `probe-api`（或 `probe-api.exe`）二进制文件。
 
 ```bash
-git tag -a v0.1.0 -m "probe-api v0.1.0: detect Responses API vs Chat Completions support"
-git push origin v0.1.0
+git tag -a v0.3.0 -m "v0.3.0: one-shot probe for Responses API, Chat Completions, and Anthropic Messages"
+git push origin v0.3.0
 ```
 
 ## 编译

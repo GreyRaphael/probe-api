@@ -2,9 +2,9 @@
 
 [中文文档](README-CN.md)
 
-Detect whether an OpenAI-compatible API provider supports **Responses API** or **Chat Completions API** (or both).
+Detect whether an OpenAI-compatible API provider supports **Responses API**, **Chat Completions API**, or **Anthropic Messages API** — all in one shot.
 
-Useful for configuring tools like [Codex CLI](https://github.com/openai/codex) that require a specific wire protocol — set `wire_api = "chat"` when the provider only supports Chat Completions.
+Useful for configuring tools like [Codex CLI](https://github.com/openai/codex) that require a specific wire protocol.
 
 ## Install
 
@@ -27,6 +27,11 @@ make build
 probe-api [flags] <base_url> <api_key>
 ```
 
+Probes all three protocols in one shot:
+1. **Responses API** — `POST /responses` (OpenAI native)
+2. **Chat Completions API** — `POST /chat/completions` (OpenAI compatible)
+3. **Anthropic Messages API** — `POST /messages` with `x-api-key` auth
+
 ### Flags
 
 | Flag | Short | Default | Description |
@@ -34,28 +39,24 @@ probe-api [flags] <base_url> <api_key>
 | `--version` | `-v` | | Print version and exit |
 | `--help` | `-h` | | Print usage and exit |
 | `--model` | `-m` | `test` | Model name for probe requests |
-| `--anthropic` | `-a` | | Probe Anthropic Messages API (`/messages`) |
 
 ### Examples
 
 ```bash
-# OpenRouter (supports both APIs)
+# OpenRouter (all three supported)
 probe-api https://openrouter.ai/api/v1 sk-or-xxx
 
 # Xiaomi MiMo (Chat Completions only)
 probe-api -m mimo-v2.5-pro https://token-plan-cn.xiaomimimo.com/v1 tp-xxx
 
-# OpenAI (supports both APIs)
+# DeepSeek Anthropic endpoint
+probe-api https://api.deepseek.com/anthropic sk-xxx
+
+# OpenAI
 probe-api https://api.openai.com/v1 sk-xxx
 
-# Local Ollama (Chat Completions only, no API key needed)
+# Local Ollama
 probe-api http://localhost:11434/v1 ollama
-
-# DeepSeek Anthropic endpoint
-probe-api -a https://api.deepseek.com/anthropic sk-xxx
-
-# Anthropic official
-probe-api -a -m claude-sonnet-4-20250514 https://api.anthropic.com sk-xxx
 ```
 
 ### Output
@@ -63,8 +64,9 @@ probe-api -a -m claude-sonnet-4-20250514 https://api.anthropic.com sk-xxx
 ```
 Probing: https://openrouter.ai/api/v1
 ---
-  Responses API             -> HTTP 400  [OK] endpoint exists
-  Chat Completions API      -> HTTP 400  [OK] endpoint exists
+  Responses API                  -> HTTP 401  [OK] endpoint exists
+  Chat Completions API           -> HTTP 401  [OK] endpoint exists
+  Anthropic Messages API         -> HTTP 401  [OK] endpoint exists
 ---
 404/405 = not supported | 200/400/422 = endpoint exists | 0 = connection failed
 ```
@@ -96,8 +98,8 @@ requires_openai_auth = false
 Push an annotated tag to trigger GitHub Actions — builds `linux/amd64`, `linux/arm64`, `darwin/amd64`, `darwin/arm64` (tar.gz) and `windows/amd64` (zip). Each archive contains a single `probe-api` (or `probe-api.exe`) binary.
 
 ```bash
-git tag -a v0.1.0 -m "probe-api v0.1.0: detect Responses API vs Chat Completions support"
-git push origin v0.1.0
+git tag -a v0.3.0 -m "v0.3.0: one-shot probe for Responses API, Chat Completions, and Anthropic Messages"
+git push origin v0.3.0
 ```
 
 ## Build
