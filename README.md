@@ -28,7 +28,7 @@ git tag -a v0.1.0 -m "probe-api v0.1.0: detect Responses API vs Chat Completions
 git push origin v0.1.0
 ```
 
-Binaries built: `linux/amd64`, `linux/arm64`, `darwin/amd64`, `darwin/arm64`, `windows/amd64`.
+Binaries: `linux/amd64`, `linux/arm64`, `darwin/amd64`, `darwin/arm64` (tar.gz), `windows/amd64` (zip). Each archive contains a single `probe-api` (or `probe-api.exe`) binary.
 
 ## Usage
 

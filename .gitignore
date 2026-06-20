@@ -1,3 +1,6 @@
 probe-api
 probe-api.exe
+probe-api-*.tar.gz
+probe-api-*.zip
+checksums.txt
 dist/
