@@ -34,6 +34,7 @@ probe-api [flags] <base_url> <api_key>
 | `--version` | `-v` | | Print version and exit |
 | `--help` | `-h` | | Print usage and exit |
 | `--model` | `-m` | `test` | Model name for probe requests |
+| `--anthropic` | `-a` | | Probe Anthropic Messages API (`/messages`) |
 
 ### Examples
 
@@ -49,6 +50,12 @@ probe-api https://api.openai.com/v1 sk-xxx
 
 # Local Ollama (Chat Completions only, no API key needed)
 probe-api http://localhost:11434/v1 ollama
+
+# DeepSeek Anthropic endpoint
+probe-api -a https://api.deepseek.com/anthropic sk-xxx
+
+# Anthropic official
+probe-api -a -m claude-sonnet-4-20250514 https://api.anthropic.com sk-xxx
 ```
 
 ### Output

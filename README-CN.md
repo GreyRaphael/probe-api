@@ -34,6 +34,7 @@ probe-api [flags] <base_url> <api_key>
 | `--version` | `-v` | | 打印版本号 |
 | `--help` | `-h` | | 打印帮助信息 |
 | `--model` | `-m` | `test` | 探测请求使用的模型名 |
+| `--anthropic` | `-a` | | 探测 Anthropic Messages API（`/messages`） |
 
 ### 示例
 
@@ -49,6 +50,12 @@ probe-api https://api.openai.com/v1 sk-xxx
 
 # 本地 Ollama（仅 Chat Completions，不需要 API key）
 probe-api http://localhost:11434/v1 ollama
+
+# DeepSeek Anthropic 端点
+probe-api -a https://api.deepseek.com/anthropic sk-xxx
+
+# Anthropic 官方
+probe-api -a -m claude-sonnet-4-20250514 https://api.anthropic.com sk-xxx
 ```
 
 ### 输出示例
